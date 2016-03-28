@@ -1,6 +1,7 @@
 angular
   .module('AuthSampleApp', [
-    'ui.router'
+    'ui.router',
+    'satellizer'
     // TODO #2: Add satellizer module
   ])
   .controller('MainController', MainController)
@@ -71,7 +72,7 @@ function configRoutes($stateProvider, $urlRouterProvider, $locationProvider) {
       resolve: {
         loginRequired: loginRequired
       }
-    })
+    });
 
 
     function skipIfLoggedIn($q, $auth) {
@@ -106,7 +107,7 @@ function MainController (Account) {
 
   vm.currentUser = function() {
    return Account.currentUser();
-  }
+  };
 
 }
 
@@ -122,18 +123,22 @@ function HomeController ($http) {
     });
 }
 
-LoginController.$inject = ["Account"]; // minification protection
-function LoginController (Account) {
+LoginController.$inject = ["Account",  "$location"]; // minification protection
+function LoginController (Account, $location) {
   var vm = this;
   vm.new_user = {}; // form data
 
   vm.login = function() {
+         // TODO #4: clear sign up form
+         // TODO #5: redirect to '/profile'
     Account
       .login(vm.new_user)
       .then(function(){
-         // TODO #4: clear sign up form
-         // TODO #5: redirect to '/profile'
-      })
+        console.log("logged in");
+        vm.new_user.password = null;
+        vm.new_user.email = null;
+        $location.path('/profile');
+      });
   };
 }
 
@@ -154,10 +159,14 @@ function SignupController () {
   };
 }
 
-LogoutController.$inject = ["Account"]; // minification protection
-function LogoutController (Account) {
+LogoutController.$inject = ["Account", "$location"]; // minification protection
+function LogoutController (Account, $location) {
   Account.logout()
+  .then(function() {
+    $location.path("/login");
+  });
   // TODO #7: when the logout succeeds, redirect to the login page
+
 }
 
 
@@ -197,10 +206,11 @@ function Account($http, $q, $auth) {
   function login(userData) {
     return (
       $auth
-        .satellizerLogin(userData) // login (https://github.com/sahat/satellizer#authloginuser-options)
+        .login(userData) // login (https://github.com/sahat/satellizer#authloginuser-options)
         .then(
           function onSuccess(response) {
             //TODO #3: set token (https://github.com/sahat/satellizer#authsettokentoken)
+          $auth.setToken(response.data.token);
           },
 
           function onError(error) {
@@ -216,6 +226,13 @@ function Account($http, $q, $auth) {
     // Make sure to also wipe the user's data from the application:
     // self.user = null;
     // returns a promise!!!
+    return (
+      $auth
+        .logout()
+        .then(function() {
+          self.user = null;
+        })
+    );
   }
 
   function currentUser() {
