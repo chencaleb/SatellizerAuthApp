@@ -142,18 +142,21 @@ function LoginController (Account, $location) {
   };
 }
 
-SignupController.$inject = []; // minification protection
-function SignupController () {
+SignupController.$inject = ['Account', '$location']; // minification protection
+function SignupController (Account, $location) {
   var vm = this;
   vm.new_user = {}; // form data
 
   vm.signup = function() {
     Account
       .signup(vm.new_user)
-      .then(
-        function (response) {
+      .then(function () {
           // TODO #9: clear sign up form
+          vm.new_user.displayName = null;
+          vm.new_user.email = null;
+          vm.new_user.password = null;
           // TODO #10: redirect to '/profile'
+          $location.path('/profile');
         }
       );
   };
@@ -199,7 +202,16 @@ function Account($http, $q, $auth) {
 
   function signup(userData) {
     // TODO #8: signup (https://github.com/sahat/satellizer#authsignupuser-options)
+    $auth.signup(userData)
+      .then(
+        function onSuccess(response) {
     // then, set the token (https://github.com/sahat/satellizer#authsettokentoken)
+          $auth.setToken(response.data.token);
+        },
+        function onError(error) {
+          console.log('We have an error, gentlemen: ', response);
+        }
+      );
     // returns a promise
   }
 
@@ -251,7 +263,7 @@ function Account($http, $q, $auth) {
         self.user = null;
         deferred.reject();
       }
-    )
+    );
     self.user = promise = deferred.promise;
     return promise;
 
