@@ -9,6 +9,7 @@ var userSchema = new Schema({
   password: { type: String, select: false },
   displayName: String,
   // TODO #12
+  username: String,
   picture: String
 });
 

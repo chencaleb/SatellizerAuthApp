@@ -153,6 +153,7 @@ function SignupController (Account, $location) {
       .then(function () {
           // TODO #9: clear sign up form
           vm.new_user.displayName = null;
+          vm.new_user.username = null;
           vm.new_user.email = null;
           vm.new_user.password = null;
           // TODO #10: redirect to '/profile'
@@ -173,14 +174,21 @@ function LogoutController (Account, $location) {
 }
 
 
-ProfileController.$inject = []; // minification protection
-function ProfileController () {
+ProfileController.$inject = ['Account']; // minification protection
+function ProfileController(Account) {
   var vm = this;
   vm.new_profile = {}; // form data
 
   vm.updateProfile = function() {
     // TODO #14: Submit the form using the relevant `Account` method
-    // On success, clear the form
+    Account
+      .updateProfile(vm.new_profile)
+      .then(function() {
+      // On success, clear the form
+      vm.new_profile.displayName = null;
+      vm.new_profile.username = null;
+      vm.new_profile.email = null;
+      });
   };
 }
 
@@ -202,17 +210,21 @@ function Account($http, $q, $auth) {
 
   function signup(userData) {
     // TODO #8: signup (https://github.com/sahat/satellizer#authsignupuser-options)
-    $auth.signup(userData)
-      .then(
-        function onSuccess(response) {
-    // then, set the token (https://github.com/sahat/satellizer#authsettokentoken)
-          $auth.setToken(response.data.token);
-        },
-        function onError(error) {
-          console.log('We have an error, gentlemen: ', response);
-        }
-      );
     // returns a promise
+      return(
+      $auth
+        .signup(userData)
+        .then(
+          function onSuccess(response) {
+      // then, set the token (https://github.com/sahat/satellizer#authsettokentoken)
+            $auth.setToken(response.data.token);
+          },
+
+          function onError(error) {
+            console.log('We have an error, gentlemen: ', response);
+          }
+        )
+      );
   }
 
   function login(userData) {
@@ -274,6 +286,7 @@ function Account($http, $q, $auth) {
   }
 
   function updateProfile(profileData) {
+    console.log(profileData);
     return (
       $http
         .put('/api/me', profileData)
