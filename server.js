@@ -24,6 +24,7 @@ mongoose.connect('mongodb://localhost/angular_auth');
 
 // require User and Post models
 var User = require('./models/user');
+var Post = require('./models/post');
 
 /*
  * API Routes
@@ -50,17 +51,36 @@ app.put('/api/me', auth.ensureAuthenticated, function (req, res) {
 });
 
 app.get('/api/posts', function (req, res) {
-  res.json([
-  {
-    title: "Hardcoded Title",
-    content: "Here is some great hardcoded content for the body of a blog post. Happy coding!"
-  },
-  {
-    title: "Another Post",
-    content: "MEAN stack is the best stack."
-  }
-  ]);
+  Post.find({}, function(err, posts) {
+    if (err) {
+      console.log(err);
+    } else {
+      res.json(posts);
+    }
+  });
 });
+
+app.post('/api/posts', auth.ensureAuthenticated, function (req, res) {
+  User.findById(req.user, function (err, user) {
+    if (err) {
+      console.log(err);
+    } else {
+      var post = new Post({
+        title: req.body.title,
+        content: req.body.content
+      });
+      user.posts.push(post);
+      user.save(function(err, post) {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log('banana');
+        }
+      });
+    }
+  });
+});
+
 
 
 /*

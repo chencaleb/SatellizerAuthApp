@@ -1,6 +1,7 @@
 var mongoose = require('mongoose'),
     Schema = mongoose.Schema,
-    bcrypt = require('bcryptjs');
+    bcrypt = require('bcryptjs'),
+    Post = require('./post.js');
 
 var userSchema = new Schema({
   created: { type: Date },
@@ -10,7 +11,8 @@ var userSchema = new Schema({
   displayName: String,
   // TODO #12
   username: String,
-  picture: String
+  picture: String,
+  posts: [{ type: Schema.Types.ObjectId, ref: 'Post'}]
 });
 
 userSchema.pre('save', function (next) {

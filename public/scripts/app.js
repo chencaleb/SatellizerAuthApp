@@ -121,6 +121,15 @@ function HomeController ($http) {
     .then(function (response) {
       vm.posts = response.data;
     });
+
+  vm.createPost = function() {
+    $http
+      .post('/api/posts', vm.new_post)
+      .then(function(response) {
+        vm.posts.push(response.data);
+      });
+    vm.new_post = {};
+  };
 }
 
 LoginController.$inject = ["Account",  "$location"]; // minification protection
